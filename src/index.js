@@ -12,7 +12,6 @@ const publicDirectoryPath = path.join(__dirname, '../public');
 
 app.use(express.static(publicDirectoryPath));
 
-let count = 0;
 /**
  * callback function calls each time a client connects to the server
  * 
@@ -21,15 +20,12 @@ let count = 0;
 io.on('connection', (socket) => {
 	console.log('New WebSocket connection');
 
-	socket.emit('countUpdated', count);
+	socket.emit('message', 'Assalamualaikum !'); // emit the event to only the sender client
 
-	socket.emit('countUpdated', 'can you hear me?', 1, 2, 'abc');
-
-	socket.on('increment', () => {
-		count++;
-		socket.emit('countUpdated', count); // emit the event to only the sender client
-		io.emit('countUpdated', count); // emit the event to every client
+	socket.on('sendMessage', message => {
+		io.emit('message', message); // emit the event to every client
 	});
+
 });
 
 server.listen(port, () => {
