@@ -22,8 +22,18 @@ io.on('connection', (socket) => {
 
 	socket.emit('message', 'Assalamualaikum !'); // emit the event to only the sender client
 
+	socket.broadcast.emit('message', 'A new user has joined!'); // sending to all clients except sender
+
 	socket.on('sendMessage', message => {
 		io.emit('message', message); // emit the event to every client
+	});
+
+	socket.on('sendLocation', coords => {
+		io.emit('message', `https://google.com/maps?q=${coords.latitude},${coords.longitude}`);
+	});
+
+	socket.on('disconnect', () => {
+		io.emit('message', 'A user has left!');
 	});
 
 });
