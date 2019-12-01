@@ -22,10 +22,19 @@ app.use(express.static(publicDirectoryPath));
 io.on('connection', (socket) => {
 	console.log('New WebSocket connection');
 
-	socket.emit('message', generateMessage('Assalamualaikum !')); // emit the event to only the sender client
+	// socket.emit('message', generateMessage('Assalamualaikum !')); // emit the event to only the sender client
 
-	socket.broadcast.emit('message', generateMessage('A new user has joined!')); // sending to all clients except sender
+	// socket.broadcast.emit('message', generateMessage('A new user has joined!')); // sending to all clients except sender
 
+	socket.on('join', ({ username, room }) => {
+		socket.join(room); // call join to subscribe the socket to a given channel
+		socket.emit('message', generateMessage('Assalamualaikum !')); // emit the event to only the sender client
+		socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`)); // emit event to all clients (except sender) connected to the room
+
+		// io.emit -> io.to.emit, 
+		// socket.broadcast.emit -> socket.broadcast.to.emit
+	});
+	
 	socket.on('sendMessage', (message, callback) => {
 		const filter = new Filter();
 
@@ -33,14 +42,17 @@ io.on('connection', (socket) => {
 			return callback('Profanity is not allowed!')
 		}
 
-		io.emit('message', generateMessage(message)); // emit the event to every client
+		// io.emit('message', generateMessage(message)); // emit the event to every client
+		io.to('game').emit('message', generateMessage(message)); // emit the event to every client
 		callback(); // sending with acknowledgement
 	});
 
+	
 	socket.on('sendLocation', (coords, callback) => {
 		io.emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`));
 		callback();
 	});
+
 
 	socket.on('disconnect', () => {
 		io.emit('message', generateMessage('A user has left!'));
