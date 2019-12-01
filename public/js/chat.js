@@ -26,6 +26,7 @@ socket.emit('join', { username, room }, (error) => {
 socket.on('message', message => {
 	console.log(message);
 	const html = Mustache.render(messageTemplate, {
+		username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a')
     })
@@ -35,6 +36,7 @@ socket.on('message', message => {
 socket.on('locationMessage', (message) => {
 	console.log(message);
 	const html = Mustache.render(locationMessageTemplate, {
+		username: message.username,
 		url: message.url,
         createdAt: moment(message.createdAt).format('h:mm a')
 	});
@@ -73,8 +75,11 @@ $sendLocationButton.addEventListener('click', () => {
 		socket.emit('sendLocation', {
 			latitude: position.coords.latitude,
 			longitude: position.coords.longitude
-		}, () => {
+		}, (error) => {
 			$sendLocationButton.removeAttribute('disabled');
+			if(error) {
+				return console.warn(error);
+			}
 			console.log('Location shared!');
 		});
 	});

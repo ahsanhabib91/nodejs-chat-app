@@ -28,8 +28,8 @@ io.on('connection', (socket) => {
 	// socket.broadcast.emit('message', generateMessage('A new user has joined!')); // sending to all clients except sender
 
 	socket.on('join', (options, callback) => {
+		console.log('================ join ========================');
 		console.dir({...options});
-		console.log(io.sockets.adapter.rooms);
 		const { error, user } = addUser({ id: socket.id, ...options });
 
 		if(error) {
@@ -38,29 +38,45 @@ io.on('connection', (socket) => {
 
 		socket.join(user.room); // call join to subscribe the socket to a given channel
 
-		socket.emit('message', generateMessage('Assalamualaikum !')); // emit the event to only the sender client
-		socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`)); // emit event to all clients (except sender) connected to the room
-		
+		socket.emit('message', generateMessage('Admin', 'Assalamualaikum !')); // emit the event to only the sender client
+		socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`)); // emit event to all clients (except sender) connected to the room
+		console.log(io.sockets.adapter.rooms);
 		callback();
 		// io.emit -> io.to.emit, 
 		// socket.broadcast.emit -> socket.broadcast.to.emit
 	});
 	
 	socket.on('sendMessage', (message, callback) => {
+		const { error , user } = getUser(socket.id);
 		const filter = new Filter();
+
+		console.log('================ sendMessage ========================');
+		console.dir({...user});
+		// console.log(io.sockets.adapter.rooms);
+
+		if(error) {
+			return callback(error);
+		}
 
 		if (filter.isProfane(message)) {
 			return callback('Profanity is not allowed!')
 		}
 
 		// io.emit('message', generateMessage(message)); // emit the event to every client
-		io.to('game').emit('message', generateMessage(message)); // emit the event to every client
+		io.to(user.room).emit('message', generateMessage(user.username, message)); // emit the event to every client
 		callback(); // sending with acknowledgement
 	});
 
 	
 	socket.on('sendLocation', (coords, callback) => {
-		io.emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`));
+		const { error , user } = getUser(socket.id);
+		console.log('================ sendLocation ========================');
+
+		if(error) {
+			return callback(error);
+		}
+		// io.emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${coords.latitude},${coords.longitude}`));
+		io.to(user.room).emit('locationMessage', generateLocationMessage(user.username, `https://google.com/maps?q=${coords.latitude},${coords.longitude}`));
 		callback();
 	});
 
@@ -68,11 +84,11 @@ io.on('connection', (socket) => {
 	socket.on('disconnect', () => {
 		const user = removeUser(socket.id);
 
-		console.log('disconnect');
+		console.log('================ disconnect ================');
 		console.dir(user);
 
 		if(user) {
-			io.to(user.room).emit('message', generateMessage(`${user.username} has left!`));
+			io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left!`));
 		}
 
 	});

@@ -39,7 +39,11 @@ const removeUser = (id) => {
 }
 
 const getUser = (id) => {
-	return users.find((user) => user.id === id);
+	console.log('================ getUser =======================');
+	console.dir(id, users);
+	const user = users.find((user) => user.id === id);
+	console.dir(user);
+	return user ? { user } : { error: 'Username does not exist!' };
 }
 
 const getUsersInRoom = (room) => {
