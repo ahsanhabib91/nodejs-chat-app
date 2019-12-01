@@ -41,6 +41,10 @@ io.on('connection', (socket) => {
 		socket.emit('message', generateMessage('Admin', 'Assalamualaikum !')); // emit the event to only the sender client
 		socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`)); // emit event to all clients (except sender) connected to the room
 		console.log(io.sockets.adapter.rooms);
+		io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room)
+        });
 		callback();
 		// io.emit -> io.to.emit, 
 		// socket.broadcast.emit -> socket.broadcast.to.emit
@@ -89,6 +93,10 @@ io.on('connection', (socket) => {
 
 		if(user) {
 			io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left!`));
+			io.to(user.room).emit('roomData', {
+				room: user.room,
+				users: getUsersInRoom(user.room)
+			});
 		}
 
 	});
